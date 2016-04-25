@@ -1,0 +1,54 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Compression security theoretical underpinnings}
+\author{Dionysis Zindros}
+\date{April 2016}
+
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\begin{document}
+
+\maketitle
+
+\section*{Security under adaptive reflection}
+
+\subsection*{Adaptive reflection game}
+
+The game $\text{Game}_{\text{IND-REF}}^{\mathcal{A}, f,
+\mathcal{V}}(1^\lambda)$ is parameterized with a security parameter $\lambda$,
+a polynomial in $\lambda$ rendering function $f(\cdot, \cdot, \cdot)$, a noise
+distribution $\mathcal{V}$, and an encryption function $\mathcal{E}$.
+
+At the initialization phase of the game, the challenger produces a random
+symmetric $\lambda$-bit key $\kappa \leftarrow \mathcal{K}$. The adversary is
+given $\mathcal{V}$ and $f(\cdot, \cdot, \cdot)$.  The adversary chooses a
+distribution of secrets $\mathcal{S}$ such that $\forall s_1, s_2 \in
+\mathcal{S}: |s_1| = |s_2|$.  The challenger then chooses a secret $s
+\leftarrow \mathcal{S}$.
+
+After the initialization phase of the game, the game is played in rounds. At
+the beginning of each round $i$, the adversary chooses a reflection string
+$r_i$ and sends it to the challenger. The challenger produces a noise string
+$v_i \xleftarrow{\$} \mathcal{V}$ and computes $m_i = f(s, r_i, v_i)$.
+Subsequently $m_i$ is encrypted as $c_i = \mathcal{E}_\kappa(m_i)$, and $c_i$
+is sent back to the adversary. At the end of the round, the adversary makes
+arbitrary calls to $\mathcal{E}_\kappa$, decides if more rounds are needed, and
+if so, more rounds are played at the discretion of the adversary.
+
+When the adversary decides to complete the game, they output a guess $s^*$. The
+adversary is successful if $s = s^*$.
+
+\subsection*{Adaptive reflection security}
+
+Given a rendering function $f(\cdot, \cdot, \cdot)$ and a noise distribution
+$\mathcal{V}$, an encryption function $\mathcal{E}$ is
+\textit{indistinguishable under adaptive reflection} IND-REF if:
+
+$\forall PPT \mathcal{A}: |P[\text{Game}_{\text{IND-REF}}^{\mathcal{A}, f,
+\mathcal{V}}(1^\lambda) = 1] - P_{s_1 \leftarrow \mathcal{S}, s_2 \leftarrow
+\mathcal{S}}[s_1 = s_2]| = negl(\lambda)$
+
+\end{document}

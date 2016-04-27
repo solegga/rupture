@@ -56,7 +56,7 @@ def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
 \mathcal{V}}(\lambda)$:
     $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
     $(M, st^2_0) \leftarrow \mathcal{A}(\text{"init"}, pk, f, V)$
-    $m \leftarrow \mathcal{M}$
+    $s \leftarrow \mathcal{M}$
     playing = True
     i = 1
     while playing:
@@ -64,11 +64,11 @@ def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
         $v_i \leftarrow V$
         $m_i = f(s, r_i, v_i)$
         $c_i = \mathcal{E}_{pk}(m_i)$
-        $(st^2_i, m^*) \leftarrow \mathcal{A}(\text{"play"}, st^1_i, c_i)$
-        if $m^* \neq \bot$:
+        $(st^2_i, s^*) \leftarrow \mathcal{A}(\text{"play"}, st^1_i, c_i)$
+        if $s^* \neq \bot$:
             playing = False
         i += 1
-    if $m^* = m$:
+    if $s^* = s$:
         return 1
     return 0
 \end{lstlisting}
@@ -79,9 +79,9 @@ Let the simulator game be defined as follows:
 def $\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{A'}, f,
 \mathcal{V}}(\lambda)$:
     $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
-    $(M, m^*) \leftarrow \mathcal{A'}(pk, f, V)$
-    $m \leftarrow \mathcal{M}$
-    if $m^* = m$:
+    $(M, s^*) \leftarrow \mathcal{A'}(pk, f, V)$
+    $s \leftarrow \mathcal{M}$
+    if $s^* = s$:
         return 1
     return 0
 \end{lstlisting}

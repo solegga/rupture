@@ -22,38 +22,90 @@
 
 \subsection*{Adaptive reflection game}
 
-The game $\text{Game}_{\text{IND-REF}}^{\mathcal{A}, f,
-\mathcal{V}}(1^\lambda)$ is parameterized with a security parameter $\lambda$,
-a polynomial in $\lambda$ rendering function $f(\cdot, \cdot, \cdot)$, a noise
-distribution $\mathcal{V}$, and an encryption function $\mathcal{E}$.
+Let $\mathcal{PE} = (\mathcal{K}, \mathcal{E}, \mathcal{D})$ be a public-key
+encryption scheme, $\mathcal{A}$ be an adversary and $\mathcal{A'}$ be a
+simulator of $\mathcal{A}$.  The game
+$\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
+\mathcal{V}}(\lambda)$ is defined with a rendering function $f(\cdot, \cdot,
+\cdot)$, a noise distribution $\mathcal{V}$ and is parameterized by the
+security parameter $\lambda$.
 
-At the initialization phase of the game, the challenger produces a random
-symmetric $\lambda$-bit key $\kappa \leftarrow \mathcal{K}$. The adversary is
-given $\mathcal{V}$ and $f(\cdot, \cdot, \cdot)$.  The adversary chooses a
-distribution of secrets $\mathcal{S}$ such that $\forall s_1, s_2 \in
-\mathcal{S}: |s_1| = |s_2|$.  The challenger then chooses a secret $s
-\leftarrow \mathcal{S}$.
+At the initialization phase of the game, the challenger produces a
+$\lambda$-bit key $(pk, sk) \leftarrow \mathcal{K}(\lambda)$. The adversary is
+given $pk$, $\mathcal{V}$ and $f(\cdot, \cdot, \cdot)$.  The adversary chooses
+a distribution of secrets $\mathcal{M}$ such that $\forall s_1, s_2 \in
+\mathcal{M}: |s_1| = |s_2|$.  The challenger then chooses a secret $s
+\leftarrow \mathcal{M}$.
 
 After the initialization phase of the game, the game is played in rounds. At
 the beginning of each round $i$, the adversary chooses a reflection string
 $r_i$ and sends it to the challenger. The challenger produces a noise string
-$v_i \xleftarrow{\$} \mathcal{V}$ and computes $m_i = f(s, r_i, v_i)$.
-Subsequently $m_i$ is encrypted as $c_i = \mathcal{E}_\kappa(m_i)$, and $c_i$
-is sent back to the adversary. At the end of the round, the adversary makes
-arbitrary calls to $\mathcal{E}_\kappa$, decides if more rounds are needed, and
-if so, more rounds are played at the discretion of the adversary.
+$v_i \leftarrow \mathcal{V}$ and computes $m_i = f(s, r_i, v_i)$.  Subsequently
+$m_i$ is encrypted as $c_i = \mathcal{E}_\kappa(m_i)$, and $c_i$ is sent back
+to the adversary. At the end of the round, the adversary  decides if more
+rounds are needed, and if so, more rounds are played at the discretion of the
+adversary.
 
-When the adversary decides to complete the game, they output a guess $s^*$. The
-adversary is successful if $s = s^*$.
+When the adversary decides to complete the game, they output a guess $m^*$. The
+adversary is successful if $m = m^*$.
+
+Formally, let the adversarial game be defined as follows:
+
+\begin{lstlisting}[texcl,mathescape]
+def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
+\mathcal{V}}(\lambda)$:
+    $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
+    $(M, st^2_0) \leftarrow \mathcal{A}(\text{"init"}, pk, f, V)$
+    $m \leftarrow \mathcal{M}$
+    playing = True
+    i = 1
+    while playing:
+        $(st^1_i, r_i) \leftarrow \mathcal{A}(\text{"reflect"}, st^2_{i - 1})$
+        $v_i \leftarrow V$
+        $m_i = f(s, r_i, v_i)$
+        $c_i = \mathcal{E}_{pk}(m_i)$
+        $(st^2_i, m^*) \leftarrow \mathcal{A}(\text{"play"}, st^1_i, c_i)$
+        if $m^* \neq \bot$:
+            playing = False
+        i += 1
+    if $m^* = m$:
+        return 1
+    return 0
+\end{lstlisting}
+
+Let the simulator game be defined as follows:
+
+\begin{lstlisting}[texcl,mathescape]
+def $\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{A'}, f,
+\mathcal{V}}(\lambda)$:
+    $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
+    $(M, m^*) \leftarrow \mathcal{A'}(pk, f, V)$
+    $m \leftarrow \mathcal{M}$
+    if $m^* = m$:
+        return 1
+    return 0
+\end{lstlisting}
+
+Let
+
+\begin{equation*}
+    \text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{A}', f, V}
+    \defeq
+    Pr[\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
+\mathcal{V}}(\lambda) = 1]
+    -
+    Pr[\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{A'}, f,
+\mathcal{V}}(\lambda) = 1].
+\end{equation*}
 
 \subsection*{Adaptive reflection security}
 
-Given a rendering function $f(\cdot, \cdot, \cdot)$ and a noise distribution
-$\mathcal{V}$, an encryption function $\mathcal{E}$ is
-\textit{indistinguishable under adaptive reflection} IND-REF if:
+Given a polynomially computable rendering function $f(\cdot, \cdot, \cdot)$ and
+a  noise distribution $\mathcal{V}$, a public-key encryption scheme
+$\mathcal{PE}$ is \textit{reflectively secure} if:
 
-$\forall PPT \mathcal{A}: |P[\text{Game}_{\text{IND-REF}}^{\mathcal{A}, f,
-\mathcal{V}}(1^\lambda) = 1] - P_{s_1 \leftarrow \mathcal{S}, s_2 \leftarrow
-\mathcal{S}}[s_1 = s_2]| = negl(\lambda)$
+\begin{equation*}
+\forall PPT \mathcal{A}: \exists PPT \mathcal{A}': \text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{A}', f, V} = negl(\lambda)
+\end{equation*}
 
 \end{document}

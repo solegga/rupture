@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Compression function definition}
+\date{April 2016}
+
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\begin{document}
+
+\maketitle
+
+\section*{Compression}
+
+\subsection*{Compression function definition}
+Compression function $f$ is a polynomial polynomially reversible $1-1$ function
+that takes an input $x$ and outputs $y$. $x$ is a random variable that follows
+the non uniform distribution X. $y = f(x)$ will follow the distribution $f(X)$.
+$E(|y|) / E(|x|) < 1$ is the metric that defines the function's performance.
+
+\subsection*{Leaking compression function}
+Leaking compression function $C$ is a compression function where
+for each data string x there exist $x_1$, $x_2$ such that:
+
+$|x_1|==|x_2|$ and
+$|C(n_1||x||n_2||x_1||n_3)| < |C(n_1||x||n_2||x_2||n_3)|$,
+where $n_1$, $n_2$, $n_3$ random nonces.
+\end{document}

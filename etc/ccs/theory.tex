@@ -46,8 +46,8 @@ to the adversary. At the end of the round, the adversary  decides if more
 rounds are needed, and if so, more rounds are played at the discretion of the
 adversary.
 
-When the adversary decides to complete the game, they output a guess $m^*$. The
-adversary is successful if $m = m^*$.
+When the adversary decides to complete the game, they output a guess $s^*$. The
+adversary is successful if $s = s^*$.
 
 Formally, let the adversarial game be defined as follows:
 
@@ -55,16 +55,16 @@ Formally, let the adversarial game be defined as follows:
 def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
 \mathcal{V}}(\lambda)$:
     $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
-    $(M, st^2_0) \leftarrow \mathcal{A}(\text{"init"}, pk, f, V)$
+    $(\mathcal{M}, st) \leftarrow \mathcal{A}(\text{"init"}, pk, f, \mathcal{V})$
     $s \leftarrow \mathcal{M}$
     playing = True
     i = 1
     while playing:
-        $(st^1_i, r_i) \leftarrow \mathcal{A}(\text{"reflect"}, st^2_{i - 1})$
+        $(st, r_i) \leftarrow \mathcal{A}(\text{"reflect"}, st)$
         $v_i \leftarrow V$
         $m_i = f(s, r_i, v_i)$
         $c_i = \mathcal{E}_{pk}(m_i)$
-        $(st^2_i, s^*) \leftarrow \mathcal{A}(\text{"play"}, st^1_i, c_i)$
+        $(st, s^*) \leftarrow \mathcal{A}(\text{"play"}, st, c_i)$
         if $s^* \neq \bot$:
             playing = False
         i += 1
@@ -78,7 +78,7 @@ Let the simulator game be defined as follows:
 \begin{lstlisting}[texcl,mathescape]
 def $\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{A'}, f,
 \mathcal{V}}(\lambda)$:
-    $(M, s^*) \leftarrow \mathcal{A'}(f, V)$
+    $(\mathcal{M}, s^*) \leftarrow \mathcal{A'}(f, \mathcal{V})$
     $s \leftarrow \mathcal{M}$
     if $s^* = s$:
         return 1

@@ -78,8 +78,7 @@ Let the simulator game be defined as follows:
 \begin{lstlisting}[texcl,mathescape]
 def $\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{A'}, f,
 \mathcal{V}}(\lambda)$:
-    $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
-    $(M, s^*) \leftarrow \mathcal{A'}(pk, f, V)$
+    $(M, s^*) \leftarrow \mathcal{A'}(f, V)$
     $s \leftarrow \mathcal{M}$
     if $s^* = s$:
         return 1

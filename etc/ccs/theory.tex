@@ -1,15 +1,11 @@
-\documentclass{article}
-\usepackage[utf8]{inputenc}
+\documentclass{article} \usepackage[utf8]{inputenc}
 
-\title{Compression security theoretical underpinnings}
-\author{Dionysis Zindros}
-\date{April 2016}
+\title{Compression security theoretical underpinnings} \author{Dimitris
+Karakostas} \author{Aggelos Kiayias} \author{Dionysis Zindros} \date{April
+2016}
 
-\usepackage{natbib}
-\usepackage{amsmath}
-\usepackage{graphicx}
-\usepackage{listings}
-\usepackage{mathtools}
+\usepackage{natbib} \usepackage{amsmath} \usepackage{graphicx}
+\usepackage{listings} \usepackage{mathtools}
 
 
 \newcommand\defeq{\stackrel{\mathclap{\normalfont\mbox{def}}}{=}}
@@ -23,7 +19,7 @@
 \subsection*{Adaptive reflection game}
 
 Let $\mathcal{PE} = (\mathcal{K}, \mathcal{E}, \mathcal{D})$ be a public-key
-encryption scheme, $\mathcal{A}$ be an adversary and $\mathcal{A'}$ be a
+encryption scheme, $\mathcal{A}$ be an adversary and $\mathcal{S}$ be a
 simulator of $\mathcal{A}$.  The game
 $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
 \mathcal{V}}(\lambda)$ is defined with a rendering function $f(\cdot, \cdot,
@@ -51,51 +47,31 @@ adversary is successful if $s = s^*$.
 
 Formally, let the adversarial game be defined as follows:
 
-\begin{lstlisting}[texcl,mathescape]
-def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
-\mathcal{V}}(\lambda)$:
-    $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
-    $(\mathcal{M}, st) \leftarrow \mathcal{A}(\text{"init"}, pk, f, \mathcal{V})$
-    $s \leftarrow \mathcal{M}$
-    playing = True
-    i = 1
-    while playing:
-        $(st, r_i) \leftarrow \mathcal{A}(\text{"reflect"}, st)$
-        $v_i \leftarrow V$
-        $m_i = f(s, r_i, v_i)$
-        $c_i = \mathcal{E}_{pk}(m_i)$
-        $(st, s^*) \leftarrow \mathcal{A}(\text{"play"}, st, c_i)$
-        if $s^* \neq \bot$:
-            playing = False
-        i += 1
-    if $s^* = s$:
-        return 1
-    return 0
-\end{lstlisting}
+\begin{lstlisting}[texcl,mathescape] def
+$\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f,
+\mathcal{V}, g)$: $(pk, sk) \leftarrow \mathcal{K}(\lambda)$ $(\mathcal{M}, st)
+\leftarrow \mathcal{A}(\text{"init"}, pk, f, \mathcal{V})$ $s \leftarrow
+\mathcal{M}$ playing = True i = 1 while playing: $(st, r_i) \leftarrow
+\mathcal{A}(\text{"reflect"}, st)$ $v_i \leftarrow V$ $m_i = f(s, r_i, v_i)$
+$c_i = \mathcal{E}_{pk}(m_i)$ $(st, s^*) \leftarrow \mathcal{A}(\text{"play"},
+st, c_i)$ if $s^* \neq \bot$: playing = False i += 1 if $s^* = g(s)$: return 1
+return 0 \end{lstlisting}
 
 Let the simulator game be defined as follows:
 
-\begin{lstlisting}[texcl,mathescape]
-def $\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{A'}, f,
-\mathcal{V}}(\lambda)$:
-    $(\mathcal{M}, s^*) \leftarrow \mathcal{A'}(f, \mathcal{V})$
-    $s \leftarrow \mathcal{M}$
-    if $s^* = s$:
-        return 1
-    return 0
-\end{lstlisting}
+\begin{lstlisting}[texcl,mathescape] def
+$\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{S}}(\lambda, f,
+\mathcal{V}, g)$: $(\mathcal{M}, s^*) \leftarrow \mathcal{S}(f, \mathcal{V})$
+$s \leftarrow \mathcal{M}$ if $g(s^*) = s$: return 1 return 0 \end{lstlisting}
 
 Let
 
-\begin{equation*}
-    \text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{A}', f, V}
-    \defeq
-    Pr[\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}, f,
-\mathcal{V}}(\lambda) = 1]
-    -
-    Pr[\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{A'}, f,
-\mathcal{V}}(\lambda) = 1].
-\end{equation*}
+\begin{equation*} \text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{A}', f,
+\mathcal{V}, g} \defeq
+Pr[\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f,
+\mathcal{V}, g) = 1] -
+Pr[\text{Game}_{\text{REF-SEC-SIM}}^{\mathcal{PE},\mathcal{S}}(\lambda, f,
+\mathcal{V}, g) = 1].  \end{equation*}
 
 \subsection*{Adaptive reflection security}
 
@@ -103,8 +79,87 @@ Given a polynomially computable rendering function $f(\cdot, \cdot, \cdot)$ and
 a  noise distribution $\mathcal{V}$, a public-key encryption scheme
 $\mathcal{PE}$ is \textit{reflectively secure} if:
 
-\begin{equation*}
-\forall PPT \mathcal{A}: \exists PPT \mathcal{A}': \text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{A}', f, V} = negl(\lambda)
+\begin{equation*} \forall g: \forall PPT \mathcal{A}: \exists PPT \mathcal{A}':
+\text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{A}', f, V, g} = negl(\lambda)
 \end{equation*}
+
+\subsection*{Compression functions} A compression function $Com$ is a
+polynomial polynomially reversible $1 - 1$ function that takes an input $x$ and
+outputs $y$. $x$ is a random variable that follows the non uniform distribution
+X. $y = Com(x)$ will follow the distribution $Com(X)$.  $E(|y|) / E(|x|) < 1$
+is the metric that defines the function's performance (where $E$ denotes
+expectation).
+
+\subsection*{Compression security}
+
+We now wish to shift our interest to algorithms which compose compression and
+encryption.  Therefore, we treat the public-key encryption scheme above as a
+composition of a compression and encryption algorithm:
+
+\begin{equation*} \mathcal{E} = Enc \circ Com \end{equation*}
+
+$Com$ denotes a compression function as defined above.
+
+\subsection*{Reflective attacks}
+
+Given a plaintext property $Q$, the reflective attack wishes to obtain a
+reflection string $r$ which can be used to distinguish the property. This
+attack exists when there is some reflection-finding algorithm
+$\mathcal{O}_R(Q)$ which, given the property % and the fact that the secret
+space is limited?  , produces appropriate reflection strings that can be
+further compressed and encrypted in a way that they are distinguishable by a
+distinguishing algorithm $\mathcal{O}_D(Q)$.  These two algorithms constitute
+an attack oracle pair $(\mathcal{O}_R(Q), \mathcal{O}_D(Q))$.
+
+Specifically, let the attack be defined as follows:
+
+\begin{lstlisting}[texcl,mathescape] def $\text{Attack}(\lambda, Q)$: $(pk, sk)
+\leftarrow \mathcal{K}(\lambda)$ $s \leftarrow \mathcal{M}$ $r \leftarrow
+\mathcal{O}_R(Q)$ $v \leftarrow \mathcal{V}$ $m = f(s, r, v)$ $c =
+\mathcal{E}_{pk}(m)$ $q \leftarrow \mathcal{O}_D(c)$ return $q$
+\end{lstlisting}
+
+Then let a simulation of the attack be defined as follows:
+
+\begin{lstlisting}[texcl,mathescape] def $\text{Attack}_{SIM}(Q)$: $q
+\leftarrow \mathcal{O}_R$ return $q$ \end{lstlisting}
+
+Then the attack is successful for some property $Q$ if:
+
+\begin{equation*} |Pr[\text{Attack}(Q, \lambda)] - Pr[\text{Attack}_{SIM}(Q)]|
+= non-negl(\lambda) \end{equation*}
+
+This property-distinguishing basis can be used repeatitively to unveil the
+whole secret.  In length-leaking attacks, the distinguisher oracle simply
+compares lengths:
+
+\begin{lstlisting}[texcl,mathescape] def $\mathcal{O}_D(c)$: return $|c| >
+\alpha$ \end{lstlisting}
+
+Where $\alpha$ is a constant we compare against (in practice, the distinguisher
+could compare the length of two different ciphertexts).
+
+\subsection*{The BREACH attack}
+
+In the modern web, function $f$ represents a specific attack target, which
+constitutes the renderer of a web page, given a specific secret, reflection,
+and noise. Typically, $f$ will concatenate instances of the secret, the
+reflection, and the noise, between some context strings which constitute the
+static portions of the site.
+
+The BREACH attack is a specific instance of reflection-based attacks in which
+the $Q$ property pertains to a prefix of the secret. It asks "Does the secret
+begin with such text?" The reflection algorithm $\mathcal{O}_R(Q)$ for BREACH
+then produces the exact prefix being guessed as a reflection string.
+
+As $Com$ is a variant of LZ77, repetitions of strings are well-compressed. As
+$Enc$ leaks some (quantized) length, $\mathcal{O}_D(Q)$ can distinguish based
+on length.
+
+\subsection*{Compression is insecure}
+
+We now move on to show that such reflective and distinguisher oracle pairs
+exist for a complete class of plaintext properties for all length-preserving
+encryption functions when composed with any compression function.
 
 \end{document}

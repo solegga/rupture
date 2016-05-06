@@ -18,6 +18,11 @@ Dionysis Zindros
 \usepackage{mathtools}
 \usepackage{amsfonts}
 
+\usepackage{amssymb}
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
 \newcommand\defeq{\stackrel{\mathclap{\normalfont\mbox{def}}}{=}}
 
 \begin{document}
@@ -34,13 +39,13 @@ simulator of $\mathcal{A}$.  The game
 $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda,  f,
 \mathcal{V}, g)$ is parameterized with a rendering function $f(\cdot, \cdot,
 \cdot)$, a noise distribution $\mathcal{V}$, the security parameter $\lambda$,
-and some plain-text property $Q$.
+and some plain-text function $g$, and a distribution of secrets $\mathcal{M}$
+such that $\forall s_1, s_2 \in \mathcal{M}: |s_1| = |s_2|$.
 
 At the initialization phase of the game, the challenger produces a
 $\lambda$-bit key $(pk, sk) \leftarrow \mathcal{K}(\lambda)$. The adversary is
-given $pk$, $\mathcal{V}$, $g$ and $f$.  The adversary chooses a distribution
-of secrets $\mathcal{M}$ such that $\forall s_1, s_2 \in \mathcal{M}: |s_1| =
-|s_2|$.  The challenger then chooses a secret $s \leftarrow \mathcal{M}$.
+given $pk$, $\mathcal{V}$, $g$ and $f$.  The challenger then chooses a secret
+$s \leftarrow \mathcal{M}$.
 
 After the initialization phase of the game, the game is played in rounds. At
 the beginning of each round $i$, the adversary chooses a reflection string
@@ -51,15 +56,15 @@ to the adversary. At the end of the round, the adversary  decides if more
 rounds are needed, and if so, more rounds are played at the discretion of the
 adversary.
 
-When the adversary decides to complete the game, they output a guess $s^*$. The
-adversary is successful if $Q(s) = s^*$.
+When the adversary decides to complete the game, they output a guess $y$. The
+adversary is successful if $g(s) = y$.
 
 Formally, let the adversarial game be defined as follows:
 
 \begin{lstlisting}[texcl,mathescape]
-def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f, \mathcal{V}, Q)$:
+def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f, \mathcal{V}, \mathcal{M}, g)$:
     $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
-    $(\mathcal{M}, st) \leftarrow \mathcal{A}(\text{"init"}, pk, f, \mathcal{V}, Q)$
+    $st \leftarrow \mathcal{A}(\text{"init"}, pk, f, \mathcal{V}, \mathcal{M}, g)$
     $s \leftarrow \mathcal{M}$
     playing = True
     i = 1
@@ -68,11 +73,11 @@ def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f, \mathca
         $v_i \leftarrow V$
         $m_i = f(s, r_i, v_i)$
         $c_i = \mathcal{E}_{pk}(m_i)$
-        $(st, s^*) \leftarrow \mathcal{A}(\text{"play"}, st, c_i)$
-        if $s^* \neq \bot$:
+        $(st, y) \leftarrow \mathcal{A}(\text{"play"}, st, c_i)$
+        if $y \neq \bot$:
             playing = False
         i += 1
-    if $s^* = Q(s)$:
+    if $y = g(s)$:
         return 1
     return 0
 \end{lstlisting}
@@ -80,10 +85,10 @@ def $\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f, \mathca
 Let the simulator game be defined as follows:
 
 \begin{lstlisting}[texcl,mathescape]
-def $\text{Game}_{\text{REF-SIM}}^{\mathcal{PE},\mathcal{S}}(\lambda, f, \mathcal{V}, Q)$:
-    $(\mathcal{M}, s^*) \leftarrow \mathcal{S}(f, \mathcal{V}, Q)$
+def $\text{Game}_{\text{REF-SIM}}^{\mathcal{PE},\mathcal{S}}(\lambda, f, \mathcal{V}, \mathcal{M}, g)$:
+    $y \leftarrow \mathcal{S}(f, \mathcal{V}, \mathcal{M}, g)$
     $s \leftarrow \mathcal{M}$
-    if $Q(s^*) = s$:
+    if $g(y) = s$:
         return 1
     return 0
 \end{lstlisting}
@@ -91,24 +96,24 @@ def $\text{Game}_{\text{REF-SIM}}^{\mathcal{PE},\mathcal{S}}(\lambda, f, \mathca
 Let
 
 \begin{equation*}
-    \text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{S}}(\lambda, f, \mathcal{V}, Q)
+    \text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{S}}(\lambda, f, \mathcal{V}, \mathcal{M}, g)
     \defeq
-    Pr[\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f, \mathcal{V}, Q) = 1]
+    Pr[\text{Game}_{\text{REF-SEC}}^{\mathcal{PE},\mathcal{A}}(\lambda, f, \mathcal{V}, \mathcal{M}, g) = 1]
     -
-    Pr[\text{Game}_{\text{REF-SIM}}^{\mathcal{PE},\mathcal{S}}(\lambda, f, \mathcal{V}, Q) = 1].
+    Pr[\text{Game}_{\text{REF-SIM}}^{\mathcal{PE},\mathcal{S}}(\lambda, f, \mathcal{V}, \mathcal{M}, g) = 1].
 \end{equation*}
 
 \subsection*{Adaptive reflection security}
 
 Given a polynomially computable rendering function $f(\cdot, \cdot, \cdot)$ and
 a  noise distribution $\mathcal{V}$, a public-key encryption scheme
-$\mathcal{PE}$ is \textit{reflectively secure} if:
+$\mathcal{PE}$ is \textit{reflection-secure} if:
 
 \begin{equation*}
-\forall Q:
+\forall g:
 \forall PPT \mathcal{A}:
 \exists PPT \mathcal{S}:
-\text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{S}}(\lambda, f, V, Q) = negl(\lambda)
+\text{Adv}_{\mathcal{PE}, \mathcal{A}, \mathcal{S}}(\lambda, f, \mathcal{V}, \mathcal{M}, g) = negl(\lambda)
 \end{equation*}
 
 \subsection*{Compression functions}
@@ -119,7 +124,7 @@ follows the non uniform distribution X. $y = Com(x)$ will follow the
 distribution $Com(X)$.  $E(|y|) / E(|x|) < 1$ is the metric that defines the
 function's performance, where $E$ denotes expectation.
 
-\subsection*{Compression security}
+\subsection*{Composing with compression}
 
 We now shift our interest to algorithms which compose compression and
 encryption.  Therefore, we treat the public-key encryption scheme above as a
@@ -130,29 +135,35 @@ composition of a compression and encryption algorithm:
 \end{equation*}
 
 $Com$ denotes a compression function as defined above, while $Enc$ denotes an
-IND-CPA-secure length-preserving encryption algorithm.
+encryption function. We stress our important assumption that $Enc$ is defined
+on $\{0, 1\}^*$ and not on some fixed-length input.
 
-To be length-preserving, $Enc$ must satisfy the following property:
+\subsection*{Length monotonicity}
+
+An important assumption for our attack is that the encryption function $Enc$ is
+monotonic with respect to length. Specifically,
 
 \begin{equation*}
-    \exists c \in \mathbb{N}:
-    \forall m1, m2 \in \{0, 1\}^*:
-    |m2| - |m1| > c
-    \Rightarrow
-    |Enc(m2)| > |Enc(m1)|
+\begin{split}
+\forall m_1, m_2 \in \{0, 1\}^*\\
+\forall \kappa_1, \kappa_2 \in \mathcal{K}\\
+|m_2| > |m_1|
+\Rightarrow
+|Enc_{\kappa_1}(m_2)| \geq |Enc_{\kappa_2}(m_1)|
+\end{split}
 \end{equation*}
 
-\subsection*{Reflective attacks}
+\subsection*{Reflection attacks}
 
-Given a plaintext property $Q$, the reflective attack wishes to obtain a
+Given a plaintext property $Q$, the reflection attack wishes to obtain a
 reflection string $r$ which can be used to distinguish the property. This
 attack exists when there is some reflection-finding algorithm
 $\mathcal{O}_R(Q)$ which, given the property,
 % and the fact that the secret space is limited?
- produces appropriate reflection strings that can be further compressed and
- encrypted in a way that they are distinguishable by a distinguishing algorithm
- $\mathcal{O}_D(Q)$.  These two algorithms constitute an attack oracle pair
- $(\mathcal{O}_R(Q), \mathcal{O}_D(Q))$.
+produces appropriate reflection strings that can be further compressed and
+encrypted in a way that they are distinguishable by a distinguishing algorithm
+$\mathcal{O}_D(Q)$.  These two algorithms constitute an attack oracle pair
+$(\mathcal{O}_R(Q), \mathcal{O}_D(Q))$.
 
 Specifically, let the attack be defined as follows:
 
@@ -160,46 +171,28 @@ Specifically, let the attack be defined as follows:
 def $\text{Attack}(\lambda, Q, \mathcal{M}, \mathcal{V}, f)$:
     $(pk, sk) \leftarrow \mathcal{K}(\lambda)$
     $s \leftarrow \mathcal{M}$
-    $r \leftarrow \mathcal{O}_R(Q)$
+    $r \leftarrow \mathcal{O}_R(g)$
     $v \leftarrow \mathcal{V}$
     $m = f(s, r, v)$
     $c = \mathcal{E}_{pk}(m)$
-    $s^* \leftarrow \mathcal{O}_D(c)$
-    if $Q(s) = s^*$:
+    $y \leftarrow \mathcal{O}_D(Q, c)$
+    if $Q(s) = y$:
         return 1
     return 0
 \end{lstlisting}
-
-Then let a simulation of the attack be defined as follows:
-
-\begin{lstlisting}[texcl,mathescape]
-def $\text{Attack}_{SIM}(Q)$:
-    $s^* \leftarrow \mathcal{O}_R$
-    if $Q(s) = s^*$:
-        return 1
-    return 0
-\end{lstlisting}
-
-Then the attack is successful for some property $Q$ if:
-
-\begin{equation*}
-    |Pr[\text{Attack}(Q, \lambda)] - Pr[\text{Attack}_{SIM}(Q)]| = non-negl(\lambda)
-\end{equation*}
 
 This property-distinguishing basis can be used repeatitively to unveil the
 whole secret, given a complete property set.
 
-In length-leaking attacks, the distinguisher oracle compares lengths:
+\subsection*{Compression attacks}
 
-\begin{lstlisting}[texcl,mathescape]
-def $\mathcal{O}_D(c)$:
-    return $|c| > \alpha$
-\end{lstlisting}
+First, we illustrate how the BREACH attack specifically works.  Then we expand
+our theorems to show that any IND-CPA length-preserving encryption composed
+with compression is vulnerable to reflection attacks.
 
-Where $\alpha$ is a constant we compare against (in practice, the distinguisher
-could compare the length of two different ciphertexts).
-
-\subsection*{The BREACH attack}
+\subsection*{The BREACH model}
+In the BREACH model, we deal with a specific function $f$, property $Q$,
+compression function $Com$, and length-leaking $Enc$.
 
 In the modern web, function $f$ represents a specific attack target, which
 constitutes the renderer of a web page, given a specific secret, reflection,
@@ -207,18 +200,113 @@ and noise. Typically, $f$ will concatenate instances of the secret, the
 reflection, and the noise, between some context strings which constitute the
 static portions of the site.
 
-The BREACH attack is a specific instance of reflection-based attacks in which
-the $Q$ property pertains to a prefix of the secret. It asks "Does the secret
-begin with such text?" The reflection algorithm $\mathcal{O}_R(Q)$ for BREACH
-then produces the exact prefix being guessed as a reflection string.
+In our first attack attempt, we first assume that $f$ completely ignores any
+noise, and hence
+
+\begin{equation*}
+\forall s \forall r \forall v_1, v_2 \in \mathcal{V}: f(s, r, v_1) = f(s, r, v_2)
+\end{equation*}
+
+Moreover, we assume that $f$ outputs a concatenation of various instances of
+$s$ and $r$ with arbitrary repetitions, in addition to concatenating with some
+constant context whose position is independent of the values of $s$ and $r$.
+The number of repetitions of $s$ and $r$ are also independent of the values of
+$s$ and $r$.
+
+Formally, let us denote $\Sigma(s)$ and $\Sigma(r)$ the alphabets of $s$ and
+$r$ respectively, and assume:
+
+\begin{equation*}
+\Sigma(s) \cap \{\diamond, \star\}
+=
+\Sigma(r) \cap \{\diamond, \star\}
+=
+\emptyset
+\end{equation*}
+
+Then define:
+
+\begin{equation*}
+\Sigma\diamond \defeq \Sigma(s) \cup \Sigma(r) \cup \{\diamond, \star\}
+\end{equation*}
+
+Our assumptions for $f$ can be stated as follows:
+
+\begin{equation*}
+\begin{split}
+\exists \mu \in \Sigma\diamond^*\\
+\exists u, v, w, z \in \Sigma\diamond^*\\
+\mu = u || \diamond || v \land
+\mu = w || \star || v \land\\
+\forall s \in \Sigma(s)^*\\
+\forall r \in \Sigma(r)^*\\
+f(s, r, v) = Rep(Rep(\mu, \diamond, s), \star, r)
+\end{split}
+\end{equation*}
+
+Where $Rep$ is the string replacement function defined as follows:
+
+\begin{align*}
+Rep(\epsilon, \alpha, \beta) &\defeq \epsilon\\
+Rep(\alpha:xs, \alpha, \beta) &\defeq \beta:Rep(xs, \alpha, \beta)\\
+Rep(x:xs, \alpha, \beta) &\defeq x:Rep(xs, \alpha, \beta)
+\end{align*}
+
+Where $:$ denotes the concatenation of a symbol with a string.
+
+We will first concern ourselves with the following specific instance of $f$:
+
+\begin{equation*}
+\begin{split}
+f(s, r, v) = s || . || v\\
+. \not\in \Sigma(s) \cup \Sigma(r)
+\end{split}
+\end{equation*}
 
 As $Com$ is a variant of LZ77, repetitions of strings are well-compressed. As
-$Enc$ leaks some (quantized) length, $\mathcal{O}_D(Q)$ can distinguish based
+$Enc$ leaks some (quantized) length, $\mathcal{O}_D(g)$ can distinguish based
 on length.
+
+We examine the compression function $Com = LZ77$, which is a simplified and
+ideal model of the LZ77 compression schema. It works as follows: 
+
+The BREACH attack is a specific instance of reflection-based attacks in which
+the $Q$ property pertains to a prefix of the secret. It asks "Does the secret
+begin with such text?" The reflection algorithm $\mathcal{O}_R(g)$ for BREACH
+then produces the exact prefix being guessed as a reflection string.
+
+We examine the case where $Q$ asks the question of whether the secret is
+exactly equal to a given constant, $x$, which consists of at least three
+symbols.
+
+Then the attack will be constructed witht he following two oracles.
+
+The reflection oracle symbol reflects the candidate secret:
+
+\begin{lstlisting}[texcl,mathescape]
+def $\mathcal{O}_R(c)$:
+    return $X$
+\end{lstlisting}
+
+The distinguisher oracle compares lengths:
+
+\begin{lstlisting}[texcl,mathescape]
+def $\mathcal{O}_D(c)$:
+    return $|c| > \alpha$
+\end{lstlisting}
+
+Where $\alpha$ is a constant we compare against and is defined as follows:
+
+\begin{equation*}
+\alpha = |Enc_\epsilon(Com(f(X, X, \epsilon)))|
+\end{equation*}
+
+We can now prove that this attack has a non-negligible advantage against a
+simulator.
 
 \subsection*{Compression is insecure}
 
-We now move on to show that such reflective and distinguisher oracle pairs
+We now move on to show that such reflection and distinguisher oracle pairs
 exist for a complete class of plaintext properties for all length-preserving
 encryption functions when composed with any compression function.
 
